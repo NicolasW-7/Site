@@ -1,0 +1,134 @@
+languageCode = "en-us"
+baseURL = "AIS-DevOPS_Wailly_Nicolas"
+title = "🔥 Nicolas Wailly AIS DevOPs 🔥"
+paginate = 5
+theme = "PaperMod"
+
+enableRobotsTXT = true
+buildDrafts = false
+buildFuture = false
+buildExpired = false
+
+# googleAnalytics = "UA-123-45"
+
+[minify]
+  disableXML = true
+  minifyOutput = true
+
+[params]
+  env = "production" # to enable google analytics, opengraph, twitter-cards and schema.
+  title = "Nicolas Wailly AIS DevOPs"
+  description = "Bienvenue sur le site récapitilatif de ma formation **AIS-DevOPS**. Naviguer pour plus d'information sur mes travaux et mon parcours"
+  keywords = ["Blog", "Portfolio", "Data Science"]
+  author = "Nicolas Wailly"
+  # author = ["Me", "You"] # multiple authors
+  # images = ["<link or path of image for opengraph, twitter-cards>"]
+  DateFormat = "January 2, 2006"
+  defaultTheme = "auto" # dark, light
+  disableThemeToggle = false
+
+  ShowReadingTime = true
+  ShowPostNavLinks = true
+  ShowBreadCrumbs = true
+  ShowCodeCopyButtons = false
+  disableSpecial1stPost = false
+  disableScrollToTop = false
+  comments = false
+  hidemeta = false
+  hideSummary = false
+  showtoc = false
+  tocopen = false
+
+  [params.label]
+    text = "Nicolas Wailly DevOPS-AIS"
+    icon = "images/Logo.jpeg"
+    iconHeight = 50
+
+#ModifCorpsPage
+  [params.profileMode]
+    enabled = true # needs to be explicitly set
+    title = "Bienvenue ! 👋"
+
+    subtitle = """
+    Bienvenue sur le site récapitilatif de ma formation AIS-DevOPS. 
+    Naviguez pour plus d'informations sur mes travaux et mon parcours.
+    "Toutes les images proviennent de l'IA générative Designer de Microsoft."
+
+    
+    """
+    imageUrl = "/images/Designer (15).jpeg"
+    imageWidth = 600
+    imageHeight = 600
+    imageTitle = "Hobbit"
+
+    [[params.profileMode.buttons]]
+      name = "DevOPS"
+      url = "DevOPS"
+    [[params.profileMode.buttons]]
+      name = "AIS"
+      url = "AIS"
+
+
+  [params.homeInfoParams]
+    Title = "Bienvenue! 👋"
+    Content = """
+    Bienvenue sur le site récapitilatif de ma formation AIS-DevOPS. 
+    Naviguez pour plus d'informations sur mes travaux et mon parcours.
+    """
+    [[params.socialIcons]]
+    name = "github"
+    url = "https://github.com/NicolasW-7/AIS-DevOPS"
+    [[params.socialIcons]]
+    name = "linkedin"
+    url = "https://www.linkedin.com/in/nicolas-wailly-a6b7891b0/"
+  [[params.socialIcons]]
+    name = "buymeacoffee"
+    url = "https://buymeacoffee.com/nicolaswailly7"
+
+  [params.cover]
+    hidden = true # hide everywhere but not in structured data
+    hiddenInList = true # hide on list pages and home
+    hiddenInSingle = false # hide on single page
+
+  [params.editPost]
+    # URL = "https://github.com/NicolasW-7"
+    # Text = "Suggest Changes" # edit text
+    URL = ""
+    Text = "" # edit text
+    appendFilePath = true # to append file path to Edit link
+
+  [params.fuseOpts]
+    isCaseSensitive = false
+    shouldSort = true
+    location = 0
+    distance = 1000
+    threshold = 0.4
+    minMatchCharLength = 0
+    keys = ["title", "permalink", "summary", "content"]
+
+[menu]
+ [[menu.main]]
+    identifier = "AIS"
+    name = "AIS"
+    url = "/AIS/"
+    weight = 2
+  [[menu.main]]
+    identifier = "DevOPS"
+    name = "DevOPS"
+    url = "/DevOPS/"
+    weight = 1
+  [[menu.main]]
+    identifier = "Projets"
+    name = "Projets"
+    url = "/Projets/"
+    weight = 3
+  [[menu.main]]
+    identifier = "A propos"
+    name = "A propos"
+    url = "/A-propos/"
+    weight = 4
+  [[menu.main]]
+    identifier = "Procedures"
+    name = "Procedures"
+    url = "/Procedures/"
+    weight = 5

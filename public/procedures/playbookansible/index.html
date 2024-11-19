@@ -1,0 +1,351 @@
+<!doctype html><html lang=en dir=auto><head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>🔥 Nicolas Wailly AIS DevOPs 🔥</title>
+<meta name=keywords content><meta name=description content="Playbook Ansible Audit Linux
+---
+- name: Secure Ubuntu 22.04 Server
+  hosts: all
+  become: yes
+  tasks:
+
+    - name: Update and upgrade apt packages
+      apt:
+        update_cache: yes
+        upgrade: dist
+        autoremove: yes
+
+    - name: Install necessary packages
+      apt:
+        name: 
+          - ufw
+          - fail2ban
+          - unattended-upgrades
+        state: present
+
+    - name: Enable UFW and allow only SSH and HTTP
+      ufw:
+        rule: allow
+        port: &#34;{{ item }}&#34;
+        proto: tcp
+      with_items:
+        - 22
+        - 80
+      notify: enable_ufw
+
+    - name: Set UFW default policies
+      ufw:
+        state: enabled
+        policy: &#34;{{ item.policy }}&#34;
+      with_items:
+        - { policy: 'deny', direction: 'incoming' }
+        - { policy: 'allow', direction: 'outgoing' }
+
+    - name: Configure fail2ban
+      copy:
+        dest: /etc/fail2ban/jail.local
+        content: |
+          [sshd]
+          enabled = true
+          port = ssh
+          logpath = %(sshd_log)s
+          maxretry = 5
+          bantime = 3600
+
+    - name: Configure unattended-upgrades
+      copy:
+        dest: /etc/apt/apt.conf.d/50unattended-upgrades
+        content: |
+          Unattended-Upgrade::Allowed-Origins {
+              &#34;${distro_id}:${distro_codename}&#34;;
+              &#34;${distro_id}:${distro_codename}-security&#34;;
+          };
+          Unattended-Upgrade::Automatic-Reboot &#34;true&#34;;
+
+    - name: Ensure OpenSSH Server is installed
+      apt:
+        name: openssh-server
+        state: present
+
+    - name: Harden SSH configuration
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: &#34;{{ item.regexp }}&#34;
+        line: &#34;{{ item.line }}&#34;
+      with_items:
+        - { regexp: '^#?PermitRootLogin', line: 'PermitRootLogin no' }
+        - { regexp: '^#?PasswordAuthentication', line: 'PasswordAuthentication no' }
+        - { regexp: '^#?ChallengeResponseAuthentication', line: 'ChallengeResponseAuthentication no' }
+        - { regexp: '^#?UsePAM', line: 'UsePAM yes' }
+        - { regexp: '^#?X11Forwarding', line: 'X11Forwarding no' }
+        - { regexp: '^#?AllowTcpForwarding', line: 'AllowTcpForwarding no' }
+        - { regexp: '^#?MaxAuthTries', line: 'MaxAuthTries 3' }
+
+    - name: Restart SSH service
+      service:
+        name: ssh
+        state: restarted
+
+    - name: Add a non-root user with sudo privileges
+      user:
+        name: myuser
+        state: present
+        groups: sudo
+        append: yes
+        createhome: yes
+        shell: /bin/bash
+
+    - name: Set password for the new user
+      user:
+        name: myuser
+        password: &#34;{{ 'mysecurepassword' | password_hash('sha512') }}&#34;
+
+    - name: Disable root SSH access
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^PermitRootLogin'
+        line: 'PermitRootLogin no'
+
+    - name: Ensure sudo group can use sudo without password
+      lineinfile:
+        path: /etc/sudoers
+        state: present
+        regexp: '^%sudo'
+        line: '%sudo   ALL=(ALL:ALL) NOPASSWD:ALL'
+
+  handlers:
+    - name: enable_ufw
+      ufw:
+        state: enabled
+"><meta name=author content="Nicolas Wailly"><link rel=canonical href=//localhost:1313/procedures/playbookansible/><link crossorigin=anonymous href=/assets/css/stylesheet.d72444526d7ecbdb0015438a7fa89054a658bf759d0542e2e5df81ce94b493ee.css integrity="sha256-1yREUm1+y9sAFUOKf6iQVKZYv3WdBULi5d+BzpS0k+4=" rel="preload stylesheet" as=style><link rel=icon href=//localhost:1313/favicon.ico><link rel=icon type=image/png sizes=16x16 href=//localhost:1313/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=//localhost:1313/favicon-32x32.png><link rel=apple-touch-icon href=//localhost:1313/apple-touch-icon.png><link rel=mask-icon href=//localhost:1313/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=en href=//localhost:1313/procedures/playbookansible/><noscript><style>#theme-toggle,.top-link{display:none}</style><style>@media(prefers-color-scheme:dark){:root{--theme:rgb(29, 30, 32);--entry:rgb(46, 46, 51);--primary:rgb(218, 218, 219);--secondary:rgb(155, 156, 157);--tertiary:rgb(65, 66, 68);--content:rgb(196, 196, 197);--code-block-bg:rgb(46, 46, 51);--code-bg:rgb(55, 56, 62);--border:rgb(51, 51, 51)}.list{background:var(--theme)}.list:not(.dark)::-webkit-scrollbar-track{background:0 0}.list:not(.dark)::-webkit-scrollbar-thumb{border-color:var(--theme)}}</style></noscript><meta property="og:url" content="//localhost:1313/procedures/playbookansible/"><meta property="og:site_name" content="🔥 Nicolas Wailly AIS DevOPs 🔥"><meta property="og:title" content="🔥 Nicolas Wailly AIS DevOPs 🔥"><meta property="og:description" content="Playbook Ansible Audit Linux --- - name: Secure Ubuntu 22.04 Server hosts: all become: yes tasks: - name: Update and upgrade apt packages apt: update_cache: yes upgrade: dist autoremove: yes - name: Install necessary packages apt: name: - ufw - fail2ban - unattended-upgrades state: present - name: Enable UFW and allow only SSH and HTTP ufw: rule: allow port: &#34;{{ item }}&#34; proto: tcp with_items: - 22 - 80 notify: enable_ufw - name: Set UFW default policies ufw: state: enabled policy: &#34;{{ item.policy }}&#34; with_items: - { policy: 'deny', direction: 'incoming' } - { policy: 'allow', direction: 'outgoing' } - name: Configure fail2ban copy: dest: /etc/fail2ban/jail.local content: | [sshd] enabled = true port = ssh logpath = %(sshd_log)s maxretry = 5 bantime = 3600 - name: Configure unattended-upgrades copy: dest: /etc/apt/apt.conf.d/50unattended-upgrades content: | Unattended-Upgrade::Allowed-Origins { &#34;${distro_id}:${distro_codename}&#34;; &#34;${distro_id}:${distro_codename}-security&#34;; }; Unattended-Upgrade::Automatic-Reboot &#34;true&#34;; - name: Ensure OpenSSH Server is installed apt: name: openssh-server state: present - name: Harden SSH configuration lineinfile: path: /etc/ssh/sshd_config regexp: &#34;{{ item.regexp }}&#34; line: &#34;{{ item.line }}&#34; with_items: - { regexp: '^#?PermitRootLogin', line: 'PermitRootLogin no' } - { regexp: '^#?PasswordAuthentication', line: 'PasswordAuthentication no' } - { regexp: '^#?ChallengeResponseAuthentication', line: 'ChallengeResponseAuthentication no' } - { regexp: '^#?UsePAM', line: 'UsePAM yes' } - { regexp: '^#?X11Forwarding', line: 'X11Forwarding no' } - { regexp: '^#?AllowTcpForwarding', line: 'AllowTcpForwarding no' } - { regexp: '^#?MaxAuthTries', line: 'MaxAuthTries 3' } - name: Restart SSH service service: name: ssh state: restarted - name: Add a non-root user with sudo privileges user: name: myuser state: present groups: sudo append: yes createhome: yes shell: /bin/bash - name: Set password for the new user user: name: myuser password: &#34;{{ 'mysecurepassword' | password_hash('sha512') }}&#34; - name: Disable root SSH access lineinfile: path: /etc/ssh/sshd_config regexp: '^PermitRootLogin' line: 'PermitRootLogin no' - name: Ensure sudo group can use sudo without password lineinfile: path: /etc/sudoers state: present regexp: '^%sudo' line: '%sudo ALL=(ALL:ALL) NOPASSWD:ALL' handlers: - name: enable_ufw ufw: state: enabled "><meta property="og:locale" content="en-us"><meta property="og:type" content="article"><meta property="article:section" content="procedures"><meta name=twitter:card content="summary"><meta name=twitter:title content><meta name=twitter:description content="Playbook Ansible Audit Linux
+---
+- name: Secure Ubuntu 22.04 Server
+  hosts: all
+  become: yes
+  tasks:
+
+    - name: Update and upgrade apt packages
+      apt:
+        update_cache: yes
+        upgrade: dist
+        autoremove: yes
+
+    - name: Install necessary packages
+      apt:
+        name: 
+          - ufw
+          - fail2ban
+          - unattended-upgrades
+        state: present
+
+    - name: Enable UFW and allow only SSH and HTTP
+      ufw:
+        rule: allow
+        port: &#34;{{ item }}&#34;
+        proto: tcp
+      with_items:
+        - 22
+        - 80
+      notify: enable_ufw
+
+    - name: Set UFW default policies
+      ufw:
+        state: enabled
+        policy: &#34;{{ item.policy }}&#34;
+      with_items:
+        - { policy: 'deny', direction: 'incoming' }
+        - { policy: 'allow', direction: 'outgoing' }
+
+    - name: Configure fail2ban
+      copy:
+        dest: /etc/fail2ban/jail.local
+        content: |
+          [sshd]
+          enabled = true
+          port = ssh
+          logpath = %(sshd_log)s
+          maxretry = 5
+          bantime = 3600
+
+    - name: Configure unattended-upgrades
+      copy:
+        dest: /etc/apt/apt.conf.d/50unattended-upgrades
+        content: |
+          Unattended-Upgrade::Allowed-Origins {
+              &#34;${distro_id}:${distro_codename}&#34;;
+              &#34;${distro_id}:${distro_codename}-security&#34;;
+          };
+          Unattended-Upgrade::Automatic-Reboot &#34;true&#34;;
+
+    - name: Ensure OpenSSH Server is installed
+      apt:
+        name: openssh-server
+        state: present
+
+    - name: Harden SSH configuration
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: &#34;{{ item.regexp }}&#34;
+        line: &#34;{{ item.line }}&#34;
+      with_items:
+        - { regexp: '^#?PermitRootLogin', line: 'PermitRootLogin no' }
+        - { regexp: '^#?PasswordAuthentication', line: 'PasswordAuthentication no' }
+        - { regexp: '^#?ChallengeResponseAuthentication', line: 'ChallengeResponseAuthentication no' }
+        - { regexp: '^#?UsePAM', line: 'UsePAM yes' }
+        - { regexp: '^#?X11Forwarding', line: 'X11Forwarding no' }
+        - { regexp: '^#?AllowTcpForwarding', line: 'AllowTcpForwarding no' }
+        - { regexp: '^#?MaxAuthTries', line: 'MaxAuthTries 3' }
+
+    - name: Restart SSH service
+      service:
+        name: ssh
+        state: restarted
+
+    - name: Add a non-root user with sudo privileges
+      user:
+        name: myuser
+        state: present
+        groups: sudo
+        append: yes
+        createhome: yes
+        shell: /bin/bash
+
+    - name: Set password for the new user
+      user:
+        name: myuser
+        password: &#34;{{ 'mysecurepassword' | password_hash('sha512') }}&#34;
+
+    - name: Disable root SSH access
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^PermitRootLogin'
+        line: 'PermitRootLogin no'
+
+    - name: Ensure sudo group can use sudo without password
+      lineinfile:
+        path: /etc/sudoers
+        state: present
+        regexp: '^%sudo'
+        line: '%sudo   ALL=(ALL:ALL) NOPASSWD:ALL'
+
+  handlers:
+    - name: enable_ufw
+      ufw:
+        state: enabled
+"><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Procedures","item":"//localhost:1313/procedures/"},{"@type":"ListItem","position":2,"name":"","item":"//localhost:1313/procedures/playbookansible/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"","name":"","description":"Playbook Ansible Audit Linux --- - name: Secure Ubuntu 22.04 Server hosts: all become: yes tasks: - name: Update and upgrade apt packages apt: update_cache: yes upgrade: dist autoremove: yes - name: Install necessary packages apt: name: - ufw - fail2ban - unattended-upgrades state: present - name: Enable UFW and allow only SSH and HTTP ufw: rule: allow port: \u0026#34;{{ item }}\u0026#34; proto: tcp with_items: - 22 - 80 notify: enable_ufw - name: Set UFW default policies ufw: state: enabled policy: \u0026#34;{{ item.policy }}\u0026#34; with_items: - { policy: \u0026#39;deny\u0026#39;, direction: \u0026#39;incoming\u0026#39; } - { policy: \u0026#39;allow\u0026#39;, direction: \u0026#39;outgoing\u0026#39; } - name: Configure fail2ban copy: dest: /etc/fail2ban/jail.local content: | [sshd] enabled = true port = ssh logpath = %(sshd_log)s maxretry = 5 bantime = 3600 - name: Configure unattended-upgrades copy: dest: /etc/apt/apt.conf.d/50unattended-upgrades content: | Unattended-Upgrade::Allowed-Origins { \u0026#34;${distro_id}:${distro_codename}\u0026#34;; \u0026#34;${distro_id}:${distro_codename}-security\u0026#34;; }; Unattended-Upgrade::Automatic-Reboot \u0026#34;true\u0026#34;; - name: Ensure OpenSSH Server is installed apt: name: openssh-server state: present - name: Harden SSH configuration lineinfile: path: /etc/ssh/sshd_config regexp: \u0026#34;{{ item.regexp }}\u0026#34; line: \u0026#34;{{ item.line }}\u0026#34; with_items: - { regexp: \u0026#39;^#?PermitRootLogin\u0026#39;, line: \u0026#39;PermitRootLogin no\u0026#39; } - { regexp: \u0026#39;^#?PasswordAuthentication\u0026#39;, line: \u0026#39;PasswordAuthentication no\u0026#39; } - { regexp: \u0026#39;^#?ChallengeResponseAuthentication\u0026#39;, line: \u0026#39;ChallengeResponseAuthentication no\u0026#39; } - { regexp: \u0026#39;^#?UsePAM\u0026#39;, line: \u0026#39;UsePAM yes\u0026#39; } - { regexp: \u0026#39;^#?X11Forwarding\u0026#39;, line: \u0026#39;X11Forwarding no\u0026#39; } - { regexp: \u0026#39;^#?AllowTcpForwarding\u0026#39;, line: \u0026#39;AllowTcpForwarding no\u0026#39; } - { regexp: \u0026#39;^#?MaxAuthTries\u0026#39;, line: \u0026#39;MaxAuthTries 3\u0026#39; } - name: Restart SSH service service: name: ssh state: restarted - name: Add a non-root user with sudo privileges user: name: myuser state: present groups: sudo append: yes createhome: yes shell: /bin/bash - name: Set password for the new user user: name: myuser password: \u0026#34;{{ \u0026#39;mysecurepassword\u0026#39; | password_hash(\u0026#39;sha512\u0026#39;) }}\u0026#34; - name: Disable root SSH access lineinfile: path: /etc/ssh/sshd_config regexp: \u0026#39;^PermitRootLogin\u0026#39; line: \u0026#39;PermitRootLogin no\u0026#39; - name: Ensure sudo group can use sudo without password lineinfile: path: /etc/sudoers state: present regexp: \u0026#39;^%sudo\u0026#39; line: \u0026#39;%sudo ALL=(ALL:ALL) NOPASSWD:ALL\u0026#39; handlers: - name: enable_ufw ufw: state: enabled ","keywords":[],"articleBody":"Playbook Ansible Audit Linux --- - name: Secure Ubuntu 22.04 Server hosts: all become: yes tasks: - name: Update and upgrade apt packages apt: update_cache: yes upgrade: dist autoremove: yes - name: Install necessary packages apt: name: - ufw - fail2ban - unattended-upgrades state: present - name: Enable UFW and allow only SSH and HTTP ufw: rule: allow port: \"{{ item }}\" proto: tcp with_items: - 22 - 80 notify: enable_ufw - name: Set UFW default policies ufw: state: enabled policy: \"{{ item.policy }}\" with_items: - { policy: 'deny', direction: 'incoming' } - { policy: 'allow', direction: 'outgoing' } - name: Configure fail2ban copy: dest: /etc/fail2ban/jail.local content: | [sshd] enabled = true port = ssh logpath = %(sshd_log)s maxretry = 5 bantime = 3600 - name: Configure unattended-upgrades copy: dest: /etc/apt/apt.conf.d/50unattended-upgrades content: | Unattended-Upgrade::Allowed-Origins { \"${distro_id}:${distro_codename}\"; \"${distro_id}:${distro_codename}-security\"; }; Unattended-Upgrade::Automatic-Reboot \"true\"; - name: Ensure OpenSSH Server is installed apt: name: openssh-server state: present - name: Harden SSH configuration lineinfile: path: /etc/ssh/sshd_config regexp: \"{{ item.regexp }}\" line: \"{{ item.line }}\" with_items: - { regexp: '^#?PermitRootLogin', line: 'PermitRootLogin no' } - { regexp: '^#?PasswordAuthentication', line: 'PasswordAuthentication no' } - { regexp: '^#?ChallengeResponseAuthentication', line: 'ChallengeResponseAuthentication no' } - { regexp: '^#?UsePAM', line: 'UsePAM yes' } - { regexp: '^#?X11Forwarding', line: 'X11Forwarding no' } - { regexp: '^#?AllowTcpForwarding', line: 'AllowTcpForwarding no' } - { regexp: '^#?MaxAuthTries', line: 'MaxAuthTries 3' } - name: Restart SSH service service: name: ssh state: restarted - name: Add a non-root user with sudo privileges user: name: myuser state: present groups: sudo append: yes createhome: yes shell: /bin/bash - name: Set password for the new user user: name: myuser password: \"{{ 'mysecurepassword' | password_hash('sha512') }}\" - name: Disable root SSH access lineinfile: path: /etc/ssh/sshd_config regexp: '^PermitRootLogin' line: 'PermitRootLogin no' - name: Ensure sudo group can use sudo without password lineinfile: path: /etc/sudoers state: present regexp: '^%sudo' line: '%sudo ALL=(ALL:ALL) NOPASSWD:ALL' handlers: - name: enable_ufw ufw: state: enabled ","wordCount":"316","inLanguage":"en","datePublished":"0001-01-01T00:00:00Z","dateModified":"0001-01-01T00:00:00Z","author":{"@type":"Person","name":"Nicolas Wailly"},"mainEntityOfPage":{"@type":"WebPage","@id":"//localhost:1313/procedures/playbookansible/"},"publisher":{"@type":"Organization","name":"🔥 Nicolas Wailly AIS DevOPs 🔥","logo":{"@type":"ImageObject","url":"//localhost:1313/favicon.ico"}}}</script></head><body id=top><script>localStorage.getItem("pref-theme")==="dark"?document.body.classList.add("dark"):localStorage.getItem("pref-theme")==="light"?document.body.classList.remove("dark"):window.matchMedia("(prefers-color-scheme: dark)").matches&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=//localhost:1313/ accesskey=h title="Nicolas Wailly DevOPS-AIS (Alt + H)"><img src=//localhost:1313/images/Logo.jpeg alt aria-label=logo height=50>Nicolas Wailly DevOPS-AIS</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=//localhost:1313/devops/ title=DevOPS><span>DevOPS</span></a></li><li><a href=//localhost:1313/ais/ title=AIS><span>AIS</span></a></li><li><a href=//localhost:1313/projets/ title=Projets><span>Projets</span></a></li><li><a href=//localhost:1313/a-propos/ title="A propos"><span>A propos</span></a></li><li><a href=//localhost:1313/procedures/ title=Procedures><span>Procedures</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><div class=breadcrumbs><a href=//localhost:1313/>Home</a>&nbsp;»&nbsp;<a href=//localhost:1313/procedures/>Procedures</a></div><h1 class="post-title entry-hint-parent"></h1><div class=post-meta>2 min&nbsp;·&nbsp;Nicolas Wailly</div></header><div class=post-content><h1 id=playbook-ansible-audit-linux>Playbook Ansible Audit Linux<a hidden class=anchor aria-hidden=true href=#playbook-ansible-audit-linux>#</a></h1><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>---
+</span></span><span style=display:flex><span>- name: Secure Ubuntu 22.04 Server
+</span></span><span style=display:flex><span>  hosts: all
+</span></span><span style=display:flex><span>  become: yes
+</span></span><span style=display:flex><span>  tasks:
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    - name: Update and upgrade apt packages
+</span></span><span style=display:flex><span>      apt:
+</span></span><span style=display:flex><span>        update_cache: yes
+</span></span><span style=display:flex><span>        upgrade: dist
+</span></span><span style=display:flex><span>        autoremove: yes
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    - name: Install necessary packages
+</span></span><span style=display:flex><span>      apt:
+</span></span><span style=display:flex><span>        name: 
+</span></span><span style=display:flex><span>          - ufw
+</span></span><span style=display:flex><span>          - fail2ban
+</span></span><span style=display:flex><span>          - unattended-upgrades
+</span></span><span style=display:flex><span>        state: present
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    - name: Enable UFW and allow only SSH and HTTP
+</span></span><span style=display:flex><span>      ufw:
+</span></span><span style=display:flex><span>        rule: allow
+</span></span><span style=display:flex><span>        port: <span style=color:#e6db74>&#34;{{ item }}&#34;</span>
+</span></span><span style=display:flex><span>        proto: tcp
+</span></span><span style=display:flex><span>      with_items:
+</span></span><span style=display:flex><span>        - <span style=color:#ae81ff>22</span>
+</span></span><span style=display:flex><span>        - <span style=color:#ae81ff>80</span>
+</span></span><span style=display:flex><span>      notify: enable_ufw
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    - name: Set UFW default policies
+</span></span><span style=display:flex><span>      ufw:
+</span></span><span style=display:flex><span>        state: enabled
+</span></span><span style=display:flex><span>        policy: <span style=color:#e6db74>&#34;{{ item.policy }}&#34;</span>
+</span></span><span style=display:flex><span>      with_items:
+</span></span><span style=display:flex><span>        - <span style=color:#f92672>{</span> policy: <span style=color:#e6db74>&#39;deny&#39;</span>, direction: <span style=color:#e6db74>&#39;incoming&#39;</span> <span style=color:#f92672>}</span>
+</span></span><span style=display:flex><span>        - <span style=color:#f92672>{</span> policy: <span style=color:#e6db74>&#39;allow&#39;</span>, direction: <span style=color:#e6db74>&#39;outgoing&#39;</span> <span style=color:#f92672>}</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    - name: Configure fail2ban
+</span></span><span style=display:flex><span>      copy:
+</span></span><span style=display:flex><span>        dest: /etc/fail2ban/jail.local
+</span></span><span style=display:flex><span>        content: |
+</span></span><span style=display:flex><span>          <span style=color:#f92672>[</span>sshd<span style=color:#f92672>]</span>
+</span></span><span style=display:flex><span>          enabled <span style=color:#f92672>=</span> true
+</span></span><span style=display:flex><span>          port <span style=color:#f92672>=</span> ssh
+</span></span><span style=display:flex><span>          logpath <span style=color:#f92672>=</span> %<span style=color:#f92672>(</span>sshd_log<span style=color:#f92672>)</span>s
+</span></span><span style=display:flex><span>          maxretry <span style=color:#f92672>=</span> <span style=color:#ae81ff>5</span>
+</span></span><span style=display:flex><span>          bantime <span style=color:#f92672>=</span> <span style=color:#ae81ff>3600</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    - name: Configure unattended-upgrades
+</span></span><span style=display:flex><span>      copy:
+</span></span><span style=display:flex><span>        dest: /etc/apt/apt.conf.d/50unattended-upgrades
+</span></span><span style=display:flex><span>        content: |
+</span></span><span style=display:flex><span>          Unattended-Upgrade::Allowed-Origins <span style=color:#f92672>{</span>
+</span></span><span style=display:flex><span>              <span style=color:#e6db74>&#34;</span><span style=color:#e6db74>${</span>distro_id<span style=color:#e6db74>}</span><span style=color:#e6db74>:</span><span style=color:#e6db74>${</span>distro_codename<span style=color:#e6db74>}</span><span style=color:#e6db74>&#34;</span>;
+</span></span><span style=display:flex><span>              <span style=color:#e6db74>&#34;</span><span style=color:#e6db74>${</span>distro_id<span style=color:#e6db74>}</span><span style=color:#e6db74>:</span><span style=color:#e6db74>${</span>distro_codename<span style=color:#e6db74>}</span><span style=color:#e6db74>-security&#34;</span>;
+</span></span><span style=display:flex><span>          <span style=color:#f92672>}</span>;
+</span></span><span style=display:flex><span>          Unattended-Upgrade::Automatic-Reboot <span style=color:#e6db74>&#34;true&#34;</span>;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    - name: Ensure OpenSSH Server is installed
+</span></span><span style=display:flex><span>      apt:
+</span></span><span style=display:flex><span>        name: openssh-server
+</span></span><span style=display:flex><span>        state: present
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    - name: Harden SSH configuration
+</span></span><span style=display:flex><span>      lineinfile:
+</span></span><span style=display:flex><span>        path: /etc/ssh/sshd_config
+</span></span><span style=display:flex><span>        regexp: <span style=color:#e6db74>&#34;{{ item.regexp }}&#34;</span>
+</span></span><span style=display:flex><span>        line: <span style=color:#e6db74>&#34;{{ item.line }}&#34;</span>
+</span></span><span style=display:flex><span>      with_items:
+</span></span><span style=display:flex><span>        - <span style=color:#f92672>{</span> regexp: <span style=color:#e6db74>&#39;^#?PermitRootLogin&#39;</span>, line: <span style=color:#e6db74>&#39;PermitRootLogin no&#39;</span> <span style=color:#f92672>}</span>
+</span></span><span style=display:flex><span>        - <span style=color:#f92672>{</span> regexp: <span style=color:#e6db74>&#39;^#?PasswordAuthentication&#39;</span>, line: <span style=color:#e6db74>&#39;PasswordAuthentication no&#39;</span> <span style=color:#f92672>}</span>
+</span></span><span style=display:flex><span>        - <span style=color:#f92672>{</span> regexp: <span style=color:#e6db74>&#39;^#?ChallengeResponseAuthentication&#39;</span>, line: <span style=color:#e6db74>&#39;ChallengeResponseAuthentication no&#39;</span> <span style=color:#f92672>}</span>
+</span></span><span style=display:flex><span>        - <span style=color:#f92672>{</span> regexp: <span style=color:#e6db74>&#39;^#?UsePAM&#39;</span>, line: <span style=color:#e6db74>&#39;UsePAM yes&#39;</span> <span style=color:#f92672>}</span>
+</span></span><span style=display:flex><span>        - <span style=color:#f92672>{</span> regexp: <span style=color:#e6db74>&#39;^#?X11Forwarding&#39;</span>, line: <span style=color:#e6db74>&#39;X11Forwarding no&#39;</span> <span style=color:#f92672>}</span>
+</span></span><span style=display:flex><span>        - <span style=color:#f92672>{</span> regexp: <span style=color:#e6db74>&#39;^#?AllowTcpForwarding&#39;</span>, line: <span style=color:#e6db74>&#39;AllowTcpForwarding no&#39;</span> <span style=color:#f92672>}</span>
+</span></span><span style=display:flex><span>        - <span style=color:#f92672>{</span> regexp: <span style=color:#e6db74>&#39;^#?MaxAuthTries&#39;</span>, line: <span style=color:#e6db74>&#39;MaxAuthTries 3&#39;</span> <span style=color:#f92672>}</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    - name: Restart SSH service
+</span></span><span style=display:flex><span>      service:
+</span></span><span style=display:flex><span>        name: ssh
+</span></span><span style=display:flex><span>        state: restarted
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    - name: Add a non-root user with sudo privileges
+</span></span><span style=display:flex><span>      user:
+</span></span><span style=display:flex><span>        name: myuser
+</span></span><span style=display:flex><span>        state: present
+</span></span><span style=display:flex><span>        groups: sudo
+</span></span><span style=display:flex><span>        append: yes
+</span></span><span style=display:flex><span>        createhome: yes
+</span></span><span style=display:flex><span>        shell: /bin/bash
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    - name: Set password <span style=color:#66d9ef>for</span> the new user
+</span></span><span style=display:flex><span>      user:
+</span></span><span style=display:flex><span>        name: myuser
+</span></span><span style=display:flex><span>        password: <span style=color:#e6db74>&#34;{{ &#39;mysecurepassword&#39; | password_hash(&#39;sha512&#39;) }}&#34;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    - name: Disable root SSH access
+</span></span><span style=display:flex><span>      lineinfile:
+</span></span><span style=display:flex><span>        path: /etc/ssh/sshd_config
+</span></span><span style=display:flex><span>        regexp: <span style=color:#e6db74>&#39;^PermitRootLogin&#39;</span>
+</span></span><span style=display:flex><span>        line: <span style=color:#e6db74>&#39;PermitRootLogin no&#39;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    - name: Ensure sudo group can use sudo without password
+</span></span><span style=display:flex><span>      lineinfile:
+</span></span><span style=display:flex><span>        path: /etc/sudoers
+</span></span><span style=display:flex><span>        state: present
+</span></span><span style=display:flex><span>        regexp: <span style=color:#e6db74>&#39;^%sudo&#39;</span>
+</span></span><span style=display:flex><span>        line: <span style=color:#e6db74>&#39;%sudo   ALL=(ALL:ALL) NOPASSWD:ALL&#39;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>  handlers:
+</span></span><span style=display:flex><span>    - name: enable_ufw
+</span></span><span style=display:flex><span>      ufw:
+</span></span><span style=display:flex><span>        state: enabled
+</span></span></code></pre></div></div><footer class=post-footer><ul class=post-tags></ul><nav class=paginav><a class=prev href=//localhost:1313/procedures/pki/><span class=title>« Prev</span><br><span></span>
+</a><a class=next href=//localhost:1313/procedures/postfix/><span class=title>Next »</span><br><span></span></a></nav></footer></article></main><footer class=footer><span>&copy; 2024 <a href=//localhost:1313/>🔥 Nicolas Wailly AIS DevOPs 🔥</a></span> ·
+<span>Powered by
+<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
+        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
+</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script></body></html>
